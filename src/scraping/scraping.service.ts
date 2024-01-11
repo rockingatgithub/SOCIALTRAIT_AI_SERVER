@@ -62,6 +62,7 @@ export class ScrapingService {
             return latestNews
 
         } catch (error) {
+            console.log(error)
             return []
         }
 
