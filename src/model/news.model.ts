@@ -5,7 +5,7 @@ export type NewsDocument = HydratedDocument<News>;
 @Schema()
 export class News {
 
-    @Prop()
+    @Prop({ isRequired: true })
     title: string;
 
     @Prop()

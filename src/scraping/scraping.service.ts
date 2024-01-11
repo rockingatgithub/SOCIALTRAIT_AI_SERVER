@@ -58,6 +58,6 @@ export class ScrapingService {
 
         }
 
-        return await this.newsModel.find()
+        return await this.newsModel.find().limit(30)
     }
 }
