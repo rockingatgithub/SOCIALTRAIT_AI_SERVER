@@ -8,7 +8,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 // ==================== NestJS App module for loading all other modules ================================
 @Module({
   imports: [
-    MongooseModule.forRoot('mongodb://localhost/hackerNews'),
+    MongooseModule.forRoot(process.env.MONGODB_URL),
     ScheduleModule.forRoot(),
     ScrapingModule
   ],
