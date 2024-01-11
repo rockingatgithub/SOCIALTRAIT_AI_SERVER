@@ -5,7 +5,7 @@ import { News } from "src/model/news.model";
 import { Response } from "express";
 
 
-@Controller('scrap')
+@Controller('latestNews')
 export class ScrapingContoller {
     constructor(private readonly scrapingService: ScrapingService) { }
 
