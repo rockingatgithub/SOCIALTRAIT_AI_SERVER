@@ -16,46 +16,56 @@ export class ScrapingService {
 
     // ======================== function to scrape latest news items ============================
 
-    async getNews() : Promise<News[]> {
+    async getNews() : Promise<News[] | {}> {
 
-        // =============== launching the browser in headless mode ===========================
-        const browser = await puppeteer.launch({ headless: true });
-        const page = await browser.newPage();
+        try {
 
-        await page.setViewport({width: 1080, height: 1024});
-        await page.goto(this.pageURL, {  waitUntil: 'domcontentloaded' })
+            // =============== launching the browser in headless mode ===========================
+            const browser = await puppeteer.launch({ headless: true });
+            const page = await browser.newPage();
 
-        await page.waitForFunction( () => document.querySelector('#hnmain')?.querySelectorAll('tbody > tr').length >= 3)
+            await page.setViewport({width: 1080, height: 1024});
+            await page.goto(this.pageURL, {  waitUntil: 'domcontentloaded' })
 
-        const mainRow =  (await page.$$('#hnmain tbody > tr'))[3]
-        const titleRows = await mainRow.$$('.athing')
-        const subTextRows = await mainRow.$$('.subtext')
-        const newsRows = { titleRows, subTextRows }
-        let index = 0;
+            await page.waitForFunction( () => document.querySelector('#hnmain')?.querySelectorAll('tbody > tr').length >= 3)
 
-        // =========== Adding scraped news to the database =================
-        for (index = 0; index < newsRows.titleRows.length; index++) {
+            const mainRow =  (await page.$$('#hnmain tbody > tr'))[3]
+            const titleRows = await mainRow.$$('.athing')
+            const subTextRows = await mainRow.$$('.subtext')
+            const newsRows = { titleRows, subTextRows }
+            let index = 0;
 
-            const titleElement = newsRows.titleRows[index];
-            const subtextElement = newsRows.subTextRows[index];
+            // =========== Adding scraped news to the database =================
+            for (index = 0; index < newsRows.titleRows.length; index++) {
 
-            const title = await page.evaluate((element) => element.querySelector('.titleline')?.textContent , titleElement)
-            const author = await page.evaluate((element) => element.querySelector('.hnuser')?.textContent || '' , subtextElement)
-            const postedTime = await page.evaluate((element) => element.querySelector('.age')?.textContent || '' , subtextElement)
+                const titleElement = newsRows.titleRows[index];
+                const subtextElement = newsRows.subTextRows[index];
 
-            if (title) {
+                const title = await page.evaluate((element) => element.querySelector('.titleline')?.textContent , titleElement)
+                const author = await page.evaluate((element) => element.querySelector('.hnuser')?.textContent || '' , subtextElement)
+                const postedTime = await page.evaluate((element) => element.querySelector('.age')?.textContent || '' , subtextElement)
 
-                const newsData = new News()
-                newsData.author = author
-                newsData.postedTime = postedTime
-                newsData.title = title
+                if (title) {
 
-                const news = new this.newsModel(newsData)
-                await news.save()
+                    const newsData = new News()
+                    newsData.author = author
+                    newsData.postedTime = postedTime
+                    newsData.title = title
+
+                    const news = new this.newsModel(newsData)
+                    await news.save()
+                }
+
             }
 
+            const latestNews = await this.newsModel.find().sort({ createdAt: -1 }).limit(30)
+
+            return {news: latestNews}
+
+        } catch (error) {
+            throw new Error('Error fetching latest news!')
         }
 
-        return await this.newsModel.find().sort({ createdAt: -1 }).limit(30)
+        
     }
 }
