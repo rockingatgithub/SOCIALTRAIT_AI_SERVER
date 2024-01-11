@@ -21,7 +21,7 @@ export class ScrapingService {
         try {
 
             // =============== launching the browser in headless mode ===========================
-            const browser = await puppeteer.launch({ headless: true });
+            const browser = await puppeteer.launch({ headless: false });
             const page = await browser.newPage();
 
             await page.setViewport({width: 1080, height: 1024});
@@ -59,11 +59,10 @@ export class ScrapingService {
             }
 
             const latestNews = await this.newsModel.find().sort({ createdAt: -1 }).limit(30)
-
-            return {news: latestNews}
+            return latestNews
 
         } catch (error) {
-            throw new Error('Error fetching latest news!')
+            return []
         }
 
         
