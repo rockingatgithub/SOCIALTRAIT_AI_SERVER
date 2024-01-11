@@ -1,11 +1,11 @@
 import { Module } from "@nestjs/common";
 import { ScrapingContoller } from "./scraping.controller";
 import { ScrapingService } from "./scraping.service";
-import { TypeOrmModule } from "@nestjs/typeorm";
-import { News } from "src/model/news.model";
+import { News, NewsSchema } from "src/model/news.model";
+import { MongooseModule } from "@nestjs/mongoose";
 
 @Module({
-    imports: [TypeOrmModule.forFeature([News])],
+    imports: [MongooseModule.forFeature([ { name: News.name, schema: NewsSchema  } ])],
     controllers: [ScrapingContoller],
     providers: [ScrapingService]
 })

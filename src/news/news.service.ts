@@ -6,15 +6,13 @@ import { Repository } from 'typeorm';
 @Injectable()
 export class NewsService {
   
-  constructor(@InjectRepository(News)
-  private newsRepository: Repository<News>) {}
+  constructor() {}
 
   async getNews(): Promise<News[]> {
 
     try {
 
-      const news = await this.newsRepository.find({})
-      return news;
+     return [new News()]
 
 
 

@@ -1,18 +1,19 @@
-import { Column, Entity, ObjectId, ObjectIdColumn } from "typeorm";
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { HydratedDocument } from 'mongoose';
+export type NewsDocument = HydratedDocument<News>;
 
-@Entity()
+@Schema()
 export class News {
 
-    @ObjectIdColumn()
-    _id: ObjectId;
-
-    @Column()
+    @Prop()
     title: string;
 
-    @Column()
+    @Prop()
     author: string;
 
-    @Column()
+    @Prop()
     postedTime: string;
 
 }
+
+export const NewsSchema = SchemaFactory.createForClass(News);

@@ -3,14 +3,16 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { News } from "src/model/news.model";
 import { Repository } from "typeorm";
 import puppeteer from 'puppeteer';
+import { InjectModel } from "@nestjs/mongoose";
+import { Model } from "mongoose";
 
 
 @Injectable()
 export class ScrapingService {
 
     constructor(
-        @InjectRepository(News)
-        private newsRepository: Repository<News>
+        @InjectModel(News.name)
+        private newsModel: Model<News>
     ) {}
 
     async getNews() : Promise<News[]> {
@@ -25,39 +27,37 @@ export class ScrapingService {
 
         console.log("\n\n table found")
 
-        
-
         const mainRow =  (await page.$$('#hnmain tbody > tr'))[3]
         const titleRows = await mainRow.$$('.athing')
         const subTextRows = await mainRow.$$('.subtext')
         const newsRows = { titleRows, subTextRows }
-
 
         for (let index = 0; index < newsRows.titleRows.length; index++) {
 
             const titleElement = newsRows.titleRows[index];
             const subtextElement = newsRows.subTextRows[index];
 
-            const title = await page.evaluate((element) => element.querySelector('.titleline').textContent , titleElement)
-            const author = await page.evaluate((element) => element.querySelector('.hnuser').textContent , subtextElement)
-            const postedTime = await page.evaluate((element) => element.querySelector('.age').textContent , subtextElement)
-
+            const title = await page.evaluate((element) => element.querySelector('.titleline')?.textContent , titleElement)
+            const author = await page.evaluate((element) => element.querySelector('.hnuser')?.textContent || '' , subtextElement)
+            const postedTime = await page.evaluate((element) => element.querySelector('.age')?.textContent || '' , subtextElement)
 
             console.log("the row data\n\n", title, author, postedTime)
 
-            const news = new News()
-            news.author = author
-            news.postedTime = postedTime
-            news.title = title
-            await this.newsRepository.save(news)
+            if (title) {
 
-            console.log("the row\n\n", news)
+                const newsData = new News()
+                newsData.author = author
+                newsData.postedTime = postedTime
+                newsData.title = title
 
+                const news = new this.newsModel(newsData)
+                await news.save()
+                console.log("the row\n\n", news)
 
-            return await this.newsRepository.find()
+            }
 
         }
 
-        
+        return await this.newsModel.find()
     }
 }
