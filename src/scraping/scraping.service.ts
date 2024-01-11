@@ -21,8 +21,7 @@ export class ScrapingService {
         try {
 
             // =============== launching the browser in headless mode ===========================
-            const browser = await puppeteer.launch({ headless: false,
-                executablePath: '/usr/bin/chromium-browser' });
+            const browser = await puppeteer.launch({ headless: false});
             const page = await browser.newPage();
 
             await page.setViewport({width: 1080, height: 1024});
