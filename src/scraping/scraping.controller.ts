@@ -10,7 +10,7 @@ export class ScrapingContoller {
     
     @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
     @Get()
-    async getHello(): Promise<News[]> {
+    async getLatestNews(): Promise<News[]> {
 
         try {
             return await this.scrapingService.getNews()

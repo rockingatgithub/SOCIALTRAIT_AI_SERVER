@@ -1,11 +1,8 @@
 import { Injectable } from "@nestjs/common";
-import { InjectRepository } from "@nestjs/typeorm";
 import { News } from "src/model/news.model";
-import { Repository } from "typeorm";
 import puppeteer from 'puppeteer';
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
-
 
 @Injectable()
 export class ScrapingService {
@@ -15,24 +12,29 @@ export class ScrapingService {
         private newsModel: Model<News>
     ) {}
 
+    pageURL='https://news.ycombinator.com/'
+
+    // ======================== function to scrape latest news items ============================
+
     async getNews() : Promise<News[]> {
 
-        const browser = await puppeteer.launch({ headless: false });
+        // =============== launching the browser in headless mode ===========================
+        const browser = await puppeteer.launch({ headless: true });
         const page = await browser.newPage();
 
         await page.setViewport({width: 1080, height: 1024});
-        await page.goto('https://news.ycombinator.com/', {  waitUntil: 'domcontentloaded' })
+        await page.goto(this.pageURL, {  waitUntil: 'domcontentloaded' })
 
         await page.waitForFunction( () => document.querySelector('#hnmain')?.querySelectorAll('tbody > tr').length >= 3)
-
-        console.log("\n\n table found")
 
         const mainRow =  (await page.$$('#hnmain tbody > tr'))[3]
         const titleRows = await mainRow.$$('.athing')
         const subTextRows = await mainRow.$$('.subtext')
         const newsRows = { titleRows, subTextRows }
+        let index = 0;
 
-        for (let index = 0; index < newsRows.titleRows.length; index++) {
+        // =========== Adding scraped news to the database =================
+        for (index = 0; index < newsRows.titleRows.length; index++) {
 
             const titleElement = newsRows.titleRows[index];
             const subtextElement = newsRows.subTextRows[index];
@@ -40,8 +42,6 @@ export class ScrapingService {
             const title = await page.evaluate((element) => element.querySelector('.titleline')?.textContent , titleElement)
             const author = await page.evaluate((element) => element.querySelector('.hnuser')?.textContent || '' , subtextElement)
             const postedTime = await page.evaluate((element) => element.querySelector('.age')?.textContent || '' , subtextElement)
-
-            console.log("the row data\n\n", title, author, postedTime)
 
             if (title) {
 
@@ -52,12 +52,10 @@ export class ScrapingService {
 
                 const news = new this.newsModel(newsData)
                 await news.save()
-                console.log("the row\n\n", news)
-
             }
 
         }
 
-        return await this.newsModel.find().limit(30)
+        return await this.newsModel.find().sort({ createdAt: -1 }).limit(30)
     }
 }
